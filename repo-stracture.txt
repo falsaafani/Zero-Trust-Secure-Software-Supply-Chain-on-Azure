@@ -1,0 +1,17 @@
+zero-trust-supply-chain/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml          # GitHub Actions workflow for PR checks
+│       └── deploy.yml      # GitHub Actions workflow for deployment
+├── app/
+│   ├── main.py            # Flask application code
+│   ├── requirements.txt   # Python dependencies
+│   └── Dockerfile         # Docker configuration for the app
+├── terraform/
+│   ├── main.tf           # AKS, ACR, and Key Vault setup
+│   ├── variables.tf      # Terraform variables
+│   └── outputs.tf        # Terraform outputs
+├── policies/
+│   └── kyverno-policies.yaml  # Kyverno security policies
+├── README.md             # Project documentation
+└── .gitignore            # Git ignore file
