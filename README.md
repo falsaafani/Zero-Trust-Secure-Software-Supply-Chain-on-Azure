@@ -3,6 +3,7 @@
 This project demonstrates a secure CI/CD pipeline using GitHub Actions to deploy a containerized Python Flask application to Azure Kubernetes Service (AKS) with a Zero-Trust security model.
 
 ## Architecture
+https://github.com/falsaafani/Zero-Trust-Secure-Software-Supply-Chain-on-Azure/blob/main/zero_trust_architecture.png
 
 ## Why Zero-Trust?
 - No Implicit Trust: Every stage of the pipeline is validated.
