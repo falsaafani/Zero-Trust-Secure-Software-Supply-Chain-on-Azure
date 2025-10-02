@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${APP_NAME:-zero-trust-app}
+  namespace: zero-trust
+  labels:
+    app: ${APP_NAME:-zero-trust-app}
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/limit-connections: "10"
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+spec:
+  tls:
+  - hosts:
+    - ${APP_NAME:-zero-trust-app}.example.com
+    secretName: ${APP_NAME:-zero-trust-app}-tls
+  rules:
+  - host: ${APP_NAME:-zero-trust-app}.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ${APP_NAME:-zero-trust-app}
+            port:
+              number: 80

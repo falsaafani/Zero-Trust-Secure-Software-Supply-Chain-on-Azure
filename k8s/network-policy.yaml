@@ -1,0 +1,55 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ${APP_NAME:-zero-trust-app}-network-policy
+  namespace: zero-trust
+  labels:
+    app: ${APP_NAME:-zero-trust-app}
+spec:
+  podSelector:
+    matchLabels:
+      app: ${APP_NAME:-zero-trust-app}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+  - to:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+  - to:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: zero-trust
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress

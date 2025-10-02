@@ -1,0 +1,141 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alerts
+  namespace: monitoring
+data:
+  alerts.yml: |
+    groups:
+    - name: application_alerts
+      interval: 30s
+      rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(app_request_count{http_status=~"5.."}[5m]))
+          /
+          sum(rate(app_request_count[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: application
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(app_request_latency_seconds_bucket[5m])) by (le, endpoint)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "High request latency detected"
+          description: "95th percentile latency is {{ $value }}s for endpoint {{ $labels.endpoint }}"
+
+      - alert: ApplicationDown
+        expr: up{job="zero-trust-app"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: application
+        annotations:
+          summary: "Application is down"
+          description: "Zero-Trust application has been down for more than 2 minutes"
+
+      - alert: PodRestartingFrequently
+        expr: |
+          rate(kube_pod_container_status_restarts_total{namespace="zero-trust"}[15m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: kubernetes
+        annotations:
+          summary: "Pod restarting frequently"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is restarting frequently"
+
+      - alert: HighMemoryUsage
+        expr: |
+          container_memory_usage_bytes{namespace="zero-trust", pod=~"zero-trust-app.*"}
+          /
+          container_spec_memory_limit_bytes{namespace="zero-trust", pod=~"zero-trust-app.*"} > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: resources
+        annotations:
+          summary: "High memory usage"
+          description: "Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit"
+
+      - alert: HighCPUUsage
+        expr: |
+          rate(container_cpu_usage_seconds_total{namespace="zero-trust", pod=~"zero-trust-app.*"}[5m])
+          /
+          container_spec_cpu_quota{namespace="zero-trust", pod=~"zero-trust-app.*"} > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: resources
+        annotations:
+          summary: "High CPU usage"
+          description: "Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its CPU limit"
+
+    - name: infrastructure_alerts
+      interval: 30s
+      rules:
+      - alert: NodeNotReady
+        expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Kubernetes node not ready"
+          description: "Node {{ $labels.node }} has been unready for more than 5 minutes"
+
+      - alert: HighNodeMemoryPressure
+        expr: kube_node_status_condition{condition="MemoryPressure",status="true"} == 1
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "Node under memory pressure"
+          description: "Node {{ $labels.node }} is under memory pressure"
+
+      - alert: HighNodeDiskPressure
+        expr: kube_node_status_condition{condition="DiskPressure",status="true"} == 1
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "Node under disk pressure"
+          description: "Node {{ $labels.node }} is under disk pressure"
+
+    - name: security_alerts
+      interval: 30s
+      rules:
+      - alert: UnauthorizedAccessAttempts
+        expr: |
+          sum(rate(app_request_count{http_status="401"}[5m])) > 10
+        for: 2m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "High number of unauthorized access attempts"
+          description: "Detected {{ $value }} unauthorized access attempts per second"
+
+      - alert: SuspiciousTrafficPattern
+        expr: |
+          sum(rate(app_request_count[1m])) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "Suspicious traffic pattern detected"
+          description: "Request rate is {{ $value }} requests/second, which may indicate an attack"

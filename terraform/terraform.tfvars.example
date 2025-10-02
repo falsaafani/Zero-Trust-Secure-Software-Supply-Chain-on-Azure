@@ -1,0 +1,32 @@
+resource_group_name = "rg-zero-trust-prod"
+location            = "eastus"
+environment         = "production"
+
+aks_cluster_name = "aks-zero-trust"
+aks_dns_prefix   = "aks-zero-trust"
+aks_node_count   = 3
+aks_node_vm_size = "Standard_D2s_v3"
+
+acr_name = "acrzerotrust"
+acr_sku  = "Premium"
+
+key_vault_name              = "kv-zero-trust"
+log_analytics_workspace_name = "log-zero-trust"
+
+vnet_name                        = "vnet-zero-trust"
+vnet_address_space               = ["10.0.0.0/16"]
+aks_subnet_address_prefix        = "10.0.1.0/24"
+app_gateway_subnet_address_prefix = "10.0.2.0/24"
+
+kubernetes_version  = "1.28"
+enable_auto_scaling = true
+min_node_count      = 2
+max_node_count      = 5
+network_policy      = "azure"
+
+tags = {
+  Project     = "Zero-Trust-Secure-Supply-Chain"
+  ManagedBy   = "Terraform"
+  Environment = "Production"
+  CostCenter  = "Engineering"
+}
